@@ -143,7 +143,7 @@
                     </li>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle waves-effect waves-button waves-classic" data-toggle="dropdown">
-                            <span class="user-name"><?php echo $_SESSION['username']; ?><i class="fa fa-angle-down"></i></span>
+                            <span class="user-name"><?php if(isset($_SESSION['username'])) echo $_SESSION['username']; ?><i class="fa fa-angle-down"></i></span>
                             <img class="img-circle avatar" src="../images/noimage-team.png" width="40" height="40" alt="">
                         </a>
                         <ul class="dropdown-menu dropdown-list" role="menu">

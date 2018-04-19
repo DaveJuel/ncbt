@@ -650,7 +650,7 @@ class main extends UIfeeders
                 $attrName = $attributes[$counter]["name"];
                 $attrType = $attributes[$counter]["type"];
                 echo "<div class='form-group'>";
-                $this->inputGenerator($attributes[$counter]["id"], $attrName, $attrType,$caller);
+                $this->inputGenerator($attributes[$counter]["id"], $attrName, $attrType, $caller);
                 echo "</div>";
                 $built = true;
             }
@@ -671,7 +671,7 @@ class main extends UIfeeders
      * <p>Generates the input for attributes with default datatypes</p>
      * @param String $name The name of the attribute
      */
-    private function inputGenerator($id, $name, $type,$caller)
+    private function inputGenerator($id, $name, $type, $caller)
     {
         if (isset($this->instance)) {
             $value = $this->getValue($name);
@@ -685,19 +685,19 @@ class main extends UIfeeders
         if ($this->isDataTypeDefault($type)) {
             switch ($type) {
                 case 'text':
-                    $input = "<input type='text' name='$name' id='$caller"."_"."$name' class='form-control' $holder='$value'>";
+                    $input = "<input type='text' name='$name' id='$caller" . "_" . "$name' class='form-control' $holder='$value'>";
                     break;
                 case 'numeric':
-                    $input = "<input type='number' name='$name' id='$caller"."_"."$name' class='form-control' $holder='$value'>";
+                    $input = "<input type='number' name='$name' id='$caller" . "_" . "$name' class='form-control' $holder='$value'>";
                     break;
                 case 'date':
-                    $input = "<input type='date' name='$name' id='$caller"."_"."$name' class='form-control'$holder='$value'>";
+                    $input = "<input type='date' name='$name' id='$caller" . "_" . "$name' class='form-control'$holder='$value'>";
                     break;
                 case 'file':
-                    $input = "<input type='file' id='$caller"."_"."$name' class='form-control' $holder='$value'>";
+                    $input = "<input type='file' id='$caller" . "_" . "$name' class='form-control' $holder='$value'>";
                     break;
                 case 'long text':
-                    $input = "<textarea class='form-control' id='$caller"."_"."$name' name='$name'>$value</textarea>";
+                    $input = "<textarea class='form-control' id='$caller" . "_" . "$name' name='$name'>$value</textarea>";
                     break;
             }
         } else {
@@ -764,8 +764,8 @@ class main extends UIfeeders
             } else {
                 $query = $query . "," . str_replace(" ", "_", $columnList[$count]['name']);
             }
-        }        
-        
+        }
+
         $sql = "SELECT id," . $query . " FROM " . $table;
         //executing the query
         try {
@@ -1736,32 +1736,39 @@ class notification extends main
     {
         $userObj = new user();
         $userType = $userObj->getUserType();
-        $userId = $_SESSION['user_id'];
-        try {
-            $userTypeCode = R::getCell("SELECT DISTINCT type FROM credentials WHERE user='$userId' LIMIT 1");
-            $notificationUL = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='1' AND dedicated='$userTypeCode' ORDER BY created_on DESC");
-            for ($countUL = 0; $countUL < count($notificationUL); $countUL++) {
-                $link = "read.php?action=read&content=notification&ref=" . $notificationUL[$countUL]['id'];
-                $details = [
-                    "description" => $notificationUL[$countUL]['description'],
-                    "link" => $link,
-                    "time" => "",
-                ];
-                $this->alertDisplayFormat($details);
+        $userId=null;
+        if (isset($_SESSION['user_id'])) {
+            $userId = $_SESSION['user_id'];
+            try {
+                $userTypeCode = R::getCell("SELECT DISTINCT type FROM credentials WHERE user='$userId' LIMIT 1");
+                $notificationUL = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='1' AND dedicated='$userTypeCode' ORDER BY created_on DESC");
+                for ($countUL = 0; $countUL < count($notificationUL); $countUL++) {
+                    $link = "read.php?action=read&content=notification&ref=" . $notificationUL[$countUL]['id'];
+                    $details = [
+                        "description" => $notificationUL[$countUL]['description'],
+                        "link" => $link,
+                        "time" => "",
+                    ];
+                    $this->alertDisplayFormat($details);
+                }
+                $notificationPNP = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='2' AND dedicated='$userId' ORDER BY created_on DESC");
+                for ($countPNP = 0; $countPNP < count($notificationPNP); $countPNP++) {
+                    $link = "read.php?action=read&content=notification&ref=" . $notificationPNP[$countPNP]['id'];
+                    $details = [
+                        "description" => $notificationPNP[$countPNP]['description'],
+                        "link" => $link,
+                        "time" => "",
+                    ];
+                    $this->alertDisplayFormat($details);
+                }
+            } catch (Exception $e) {
+                error_log("NOTIFICATION(alert):" . $e);
             }
-            $notificationPNP = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='2' AND dedicated='$userId' ORDER BY created_on DESC");
-            for ($countPNP = 0; $countPNP < count($notificationPNP); $countPNP++) {
-                $link = "read.php?action=read&content=notification&ref=" . $notificationPNP[$countPNP]['id'];
-                $details = [
-                    "description" => $notificationPNP[$countPNP]['description'],
-                    "link" => $link,
-                    "time" => "",
-                ];
-                $this->alertDisplayFormat($details);
-            }
-        } catch (Exception $e) {
-            error_log("NOTIFICATION(alert):" . $e);
-        }
+        } else {
+            $this->feedbackFormat(0, 'Session expired');
+            return;
+        }       
+        
     }
 
     /**
@@ -2339,7 +2346,7 @@ class file_handler extends main
 
     public $status = "";
     public $fileId = "";
-    public $filePath="";
+    public $filePath = "";
 
     /**
      * <h1>upload</h1>
@@ -2390,13 +2397,13 @@ class file_handler extends main
                     try {
                         $fileDetails = R::dispense("image");
                         $fileDetails->name = $taget_file;
-                        $fileDetails->path = "../images/uploaded/".$taget_file;
+                        $fileDetails->path = "../images/uploaded/" . $taget_file;
                         $fileDetails->added_on = date("Y-m-d h:m:s");
                         $fileDetails->added_by = $_SESSION['user_id'];
                         $fileDetails->status = false;
                         $fileId = R::store($fileDetails);
-                        $this->filePath="../images/uploaded/".$taget_file;;
-                        $this->status = json_encode(array('id' => $fileId, 'type' => 'success', 'text' => "Upload successful",'path'=>$path));
+                        $this->filePath = "../images/uploaded/" . $taget_file;
+                        $this->status = json_encode(array('id' => $fileId, 'type' => 'success', 'text' => "Upload successful", 'path' => $path));
                     } catch (Exception $e) {
                         $this->status = $this->feedbackFormat(0, "Image not added");
                         error_log($e);

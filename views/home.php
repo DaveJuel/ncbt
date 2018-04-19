@@ -11,7 +11,12 @@ ob_start();
                 <?php $web->showContent("slider",1,["image","title","description"]); ?>
             </ul>
         </div>
-    </div>      
+    </div>
+    <!-- ========== DONATING FORM ========== -->
+    <div class="hbf_2">
+        <button class="btn btn-success btn-rounded btn-lg" data-toggle="modal" data-target="#donorApplicationModal">DONATE</button>
+    <p><?php echo $user->status; ?></p>
+    </div>       
 </section>
 <!-- ========== FEATURES ========== -->
 <section class="lightgrey_bg" id="features">

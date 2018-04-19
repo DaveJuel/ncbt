@@ -1,6 +1,6 @@
 <div class="menu-wrap">
     <nav class="profile-menu">
-        <div class="profile"><img src="../images/noimage-team.png" width="60" alt="David Green"/><span><?php echo $_SESSION['username']; ?></span></div>
+        <div class="profile"><img src="../images/noimage-team.png" width="60" alt="David Green"/><span><?php if(isset($_SESSION['username'])) echo $_SESSION['username']; ?></span></div>
         <div class="profile-menu-list">
             <a href="home.php"><i class="fa fa-home"></i><span>Home</span></a>
             <a href="notifications.php"><i class="fa fa-bell"></i><span>Notifications</span></a>
