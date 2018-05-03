@@ -10,7 +10,13 @@ $title = "Login";
                     <div class="row">
                         <div class="col-md-6">
                             <a href="#" class="logo-name text-lg"><?php echo $main->appName; ?></a>
-                            <p class="login-info"><b><?php echo $main->appName; ?></b> Is a blood collection management application for NCBT </p>
+                            <p class="login-info"><b><?php echo $main->appName; ?></b> is a premium Web Application Admin Dashboard built on top of Twitter Bootstrap 3.3.4 Framework and Redbean library.<br>
+                                It was created to be the most functional, clean and well designed theme for any types of backend applications.We have carefully designed all common elements.</p>
+                            <div class="btn-group btn-group-justified m-t-sm" role="group" aria-label="Justified button group">
+                                <a href="#" class="btn btn-facebook"><i class="fa fa-facebook"></i> Facebook</a>
+                                <a href="#" class="btn btn-twitter"><i class="fa fa-twitter"></i> Twitter</a>
+                                <a href="#" class="btn btn-google"><i class="fa fa-google-plus"></i> Google+</a>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <form method="post" id="login-form">

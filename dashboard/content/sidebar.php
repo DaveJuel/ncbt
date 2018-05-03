@@ -6,7 +6,7 @@
                     <img src="../images/noimage-team.png" class="img-circle img-responsive" alt="">
                 </div>
                 <div class="sidebar-profile-details">
-                    <span><?php if(isset($_SESSION['username'])) echo $_SESSION['username']; ?><br><small><?php echo $user->getUserType(); ?></small></span>
+                    <span><?php echo $_SESSION['username']; ?><br><small><?php echo $user->getUserType(); ?></small></span>
                 </div>
             </a>
         </div>

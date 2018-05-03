@@ -14,6 +14,9 @@ require 'config.php';
 require 'sectionFormat.php';
 $connection = new connection();
 R::setup("mysql:host=$connection->host;dbname=$connection->db", "$connection->db_user", "$connection->pass_phrase");
+R::ext('xdispense', function ($type) {
+    return R::getRedBean()->dispense($type);
+});
 $main = new main();
 class UIfeeders
 {
@@ -141,8 +144,8 @@ class main extends UIfeeders
 {
 
     public $status;
-    public $appName = "NCBT";
-    public $author = "Claude NTWARi";
+    public $appName = "Addax";
+    public $author = "David NIWEWE";
     public $dbname = "";
 
     public function __construct()
@@ -329,7 +332,10 @@ class main extends UIfeeders
                 for ($count = 0; $count < count($subjects); $count++) {
                     $subjectId = $subjects[$count]['id'];
                     $subjectTitle = $subjects[$count]['title'];
-                    echo "<li><a href='" . $action . "_article.php?article=$subjectId'>" . $subjectTitle . "</a></li>";
+                    $user = new user();
+                    if ($user->isUserAllowed($action, $subjectTitle)) {
+                        echo "<li><a href='" . $action . "_article.php?article=$subjectId'>" . $subjectTitle . "</a></li>";
+                    }
                 }
             }
         } catch (Exception $e) {
@@ -701,17 +707,17 @@ class main extends UIfeeders
                     break;
             }
         } else {
-            $input = $this->referentialDataInputGenerator($id, $name, $type);
+            $input = $this->referentialDataInputGenerator($id, $name, $type, $caller);
         }
         $formInput = $title . $input;
         echo "<div class='input-group'>" . $formInput . "</div>";
     }
 
-    private function referentialDataInputGenerator($id, $name, $type)
+    private function referentialDataInputGenerator($id, $name, $type, $caller)
     {
         $input = "";
         if (isset($id) && isset($name) && isset($type)) {
-            $startCombo = "<select type='date' name='$name' class='form-control'>";
+            $startCombo = "<select type='date' name='$name' id='$caller" . "_" . "$name' class='form-control'>";
             $subjectObj = new subject();
             $reference = $subjectObj->readReference($id);
             if (isset($reference) && $subjectObj->isDataTypeTable($type)) {
@@ -875,11 +881,6 @@ class user extends main
     public $status = "";
     public $loggedIn = null;
     public $toVerify = null;
-    private $userType = [
-        0 => "administrator",
-        1 => "editor",
-        2 => "visitor",
-    ];
     public $count;
     public $userlist = [];
 
@@ -895,7 +896,6 @@ class user extends main
     public function count()
     {
         $users = [];
-        $userTypeList = $this->userType;
         $loggedInType = $this->getUserType();
         if ($loggedInType == "administrator") {
             try {
@@ -1102,9 +1102,9 @@ class user extends main
         if (isset($_SESSION["user_id"])) {
             $userId = $_SESSION["user_id"];
             try {
-                $type = R::getCell("SELECT DISTINCT type FROM credentials WHERE user = '$userId'");
-                if ($type != null) {
-                    $userType = $this->userType[$type];
+                $type_id = R::getCell("SELECT DISTINCT type FROM credentials WHERE user = '$userId'");
+                if ($type_id != null) {
+                    $userType = R::getCell("SELECT DISTINCT title FROM role WHERE id='$type_id'");
                 }
             } catch (Exception $e) {
                 error_log("USER[getUserType]:" . $e);
@@ -1113,6 +1113,41 @@ class user extends main
         return $userType;
     }
 
+    /**
+     * This function checks if the user is allowed to do the subject.
+     * @param $toDo What the user needs
+     */
+    public function isUserAllowed($toDo, $subject)
+    {
+        $isAllowed = false;
+        $userType = $this->getUserType();
+        if (isset($userType)) {
+            try {
+                $userPrivilege = R::getRow("SELECT writing,reading FROM privilege WHERE subject='$subject'");
+                if ($toDo == 'add' && $userPrivilege['writing'] == "allowed") {
+                    $isAllowed = true;
+                }
+                if ($toDo == 'view' && $userPrivilege['reading'] == "allowed") {
+                    $isAllowed = true;
+                }
+            } catch (Exception $e) {
+                error_log("isuserAllowed:" . $e);
+            }
+        }
+        return $isAllowed;
+    }
+
+    public function listRoleInOption()
+    {
+        try {
+            $roleDetails = R::getAll("SELECT id,title FROM role");
+            for ($counter = 0; $counter < count($roleDetails); $counter++) {
+                echo "<option name='add_user_type' value=".$roleDetails[$counter]['id'].">".$roleDetails[$counter]['title']."</option>";
+            }
+        } catch (Exception $e) {
+            error_log("Unable to read list of roles.");
+        }
+    }
     /**
      * <h1>getUserDetails</h1>
      * <p>This method is to fetch information of the user.</p>
@@ -1374,7 +1409,8 @@ class content extends main
     {
         $status = false;
         try {
-            $article = R::dispense($subjectTitle);
+            $subjectTitle = str_replace(" ", "_", $subjectTitle);
+            $article = R::xdispense($subjectTitle);
             for ($counter = 0; $counter < count($attributes); $counter++) {
                 $attribute = str_replace(" ", "_", $attributes[$counter]['name']);
                 if ($attributes[$counter]['type'] == 'text') {
@@ -1406,7 +1442,7 @@ class content extends main
     public function add($content, $values, $attributes)
     {
         try {
-            $article = R::dispense($content);
+            $article = R::xdispense($content);
             for ($counter = 0; $counter < count($attributes); $counter++) {
                 $attribute = str_replace(" ", "_", $attributes[$counter]['name']);
                 $value = $values[$counter];
@@ -1736,39 +1772,32 @@ class notification extends main
     {
         $userObj = new user();
         $userType = $userObj->getUserType();
-        $userId=null;
-        if (isset($_SESSION['user_id'])) {
-            $userId = $_SESSION['user_id'];
-            try {
-                $userTypeCode = R::getCell("SELECT DISTINCT type FROM credentials WHERE user='$userId' LIMIT 1");
-                $notificationUL = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='1' AND dedicated='$userTypeCode' ORDER BY created_on DESC");
-                for ($countUL = 0; $countUL < count($notificationUL); $countUL++) {
-                    $link = "read.php?action=read&content=notification&ref=" . $notificationUL[$countUL]['id'];
-                    $details = [
-                        "description" => $notificationUL[$countUL]['description'],
-                        "link" => $link,
-                        "time" => "",
-                    ];
-                    $this->alertDisplayFormat($details);
-                }
-                $notificationPNP = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='2' AND dedicated='$userId' ORDER BY created_on DESC");
-                for ($countPNP = 0; $countPNP < count($notificationPNP); $countPNP++) {
-                    $link = "read.php?action=read&content=notification&ref=" . $notificationPNP[$countPNP]['id'];
-                    $details = [
-                        "description" => $notificationPNP[$countPNP]['description'],
-                        "link" => $link,
-                        "time" => "",
-                    ];
-                    $this->alertDisplayFormat($details);
-                }
-            } catch (Exception $e) {
-                error_log("NOTIFICATION(alert):" . $e);
+        $userId = $_SESSION['user_id'];
+        try {
+            $userTypeCode = R::getCell("SELECT DISTINCT type FROM credentials WHERE user='$userId' LIMIT 1");
+            $notificationUL = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='1' AND dedicated='$userTypeCode' ORDER BY created_on DESC");
+            for ($countUL = 0; $countUL < count($notificationUL); $countUL++) {
+                $link = "read.php?action=read&content=notification&ref=" . $notificationUL[$countUL]['id'];
+                $details = [
+                    "description" => $notificationUL[$countUL]['description'],
+                    "link" => $link,
+                    "time" => "",
+                ];
+                $this->alertDisplayFormat($details);
             }
-        } else {
-            $this->feedbackFormat(0, 'Session expired');
-            return;
-        }       
-        
+            $notificationPNP = R::getAll("SELECT id,title,description,created_on FROM notification WHERE privacy='2' AND dedicated='$userId' ORDER BY created_on DESC");
+            for ($countPNP = 0; $countPNP < count($notificationPNP); $countPNP++) {
+                $link = "read.php?action=read&content=notification&ref=" . $notificationPNP[$countPNP]['id'];
+                $details = [
+                    "description" => $notificationPNP[$countPNP]['description'],
+                    "link" => $link,
+                    "time" => "",
+                ];
+                $this->alertDisplayFormat($details);
+            }
+        } catch (Exception $e) {
+            error_log("NOTIFICATION(alert):" . $e);
+        }
     }
 
     /**
