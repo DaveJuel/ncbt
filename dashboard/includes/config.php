@@ -23,7 +23,7 @@ class connection{
                  * Local connection
                  */
                 $this->host = "localhost";
-                $this->db = "addax";
+                $this->db = "ncbt";
                 $this->db_user = "monsta";
                 $this->pass_phrase = "Rugamba@Beast101!";
             }

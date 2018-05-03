@@ -144,8 +144,8 @@ class main extends UIfeeders
 {
 
     public $status;
-    public $appName = "Addax";
-    public $author = "David NIWEWE";
+    public $appName = "Blood MS";
+    public $author = "Claude NTWALI";
     public $dbname = "";
 
     public function __construct()
