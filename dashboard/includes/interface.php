@@ -1,7 +1,7 @@
 <?php
 
 //Interface
-require 'classes.php';
+require 'classesext.php';
 $user = new user();
 $subject = new subject();
 $content = new content();
@@ -11,6 +11,9 @@ $message = new message();
 $notification = new notification();
 $smsKey = new sms();
 $fileHandler = new file_handler();
+//extended objects
+$siteObj = new site();
+$scheduleObj = new schedule();
 $action = null;
 //getting caller details
 if (isset($_REQUEST['action'])) {
@@ -118,11 +121,11 @@ switch ($action) {
         if (count($attributes) > 0) {
             //getting form values
             for ($count = 0; $count < count($attributes); $count++) {
-               if($attributes[$count]['type']=="file"){
+                if ($attributes[$count]['type'] == "file") {
                     $file = $_FILES[$attributes[$count]['name']];
                     $fileHandler->upload($file);
                     $values[$count] = $fileHandler->filePath;
-                }else{
+                } else {
                     $values[$count] = $_REQUEST[$attributes[$count]['name']];
                 }
             }
@@ -182,6 +185,22 @@ switch ($action) {
         } else {
             $main->status = $main->feedbackFormat(0, "Empty article reference id");
             die($main->status);
+        }
+        break;
+    case 'combo_location_sites':
+        $location = $_REQUEST['location'];
+        if (isset($location)) {
+            $siteObj->readByLocation($location, "combo");
+        } else {
+            echo "<option>No site available</option>";
+        }
+        break;
+    case 'combo_site_dates':
+        $sitename = $_REQUEST['site-name'];
+        if (isset($location)) {
+            $scheduleObj->readDatesBySiteName($sitename, "combo");
+        } else {
+            echo "<option>No dates available</option>";
         }
         break;
     default:
