@@ -8,22 +8,24 @@
                 <p>Tell us where you are, we tell you when we shall be there.</p>
             </div>
             <div class="modal-body" id="deleteModal_body">
-                <form role="form" onsubmit="return validateDonorForm()" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">                    
+                <form role="form" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">                    
                     <div class="form-group">
                         <div class="input-group" >
-                            <input name="donor_location" type="text" onFocus="geolocate()" class="form-control" id="autocomplete" placeholder="Enter your location"> 
+                            <input name="donor_location" type="text" onFocus="geolocate()" onFocusOut="getSiteList(this)" class="form-control" id="autocomplete" placeholder="Enter your location"> 
                         </div>                       
                     </div>
                     <div class="form-group">
                     <div class="input-group">
-                            <select name="donor_site" id="donor_site" class="form-control">
+                            <select name="donor_site" id="site-combo" onChange="getSiteDateList(this);" class="form-control">
                                 <option value="0">Available sites</option>                                
                             </select>                           
                         </div>                     
                     </div>
                     <div class="form-group">
                         <div class="input-group">
-                            <input name="donate_age" type="date" id="donate_age" class="form-control" placeholder="Current schedule">
+                            <select name="donor_site" id="site-date-combo" class="form-control">
+                                <option value="0">Available dates</option>                                
+                            </select>
                         </div>
                     </div>                    
                     <div class="col-md-4">

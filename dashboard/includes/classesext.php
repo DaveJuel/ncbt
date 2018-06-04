@@ -13,16 +13,20 @@ class site
     {
         if (isset($location)) {
             try {
-                $siteNameList = R::getCol("SELECT name FROM site WHERE location LIKE %$location%");
+                $siteNameList = R::getAll("SELECT name FROM site WHERE location LIKE :name",array(":name"=>'%'.$location.'%'));               
                 if (null !== $siteNameList && count($siteNameList) > 0) {
                     if (isset($returnType) && $returnType == "combo") {
                         //building combo box
                         echo "<option>Available site</option>";
                         for ($counter = 0; $counter < count($siteNameList); $counter++) {
-                            echo "<option value='" . $siteNameList[$counter] . "'>" . $siteNameList[$counter] . "</option>";
+                            echo "<option value='" . $siteNameList[$counter]['name'] . "'>" . $siteNameList[$counter]['name'] . "</option>";
                         }
                     } else {
                         echo json_encode($siteNameList);
+                    }
+                }else{
+                    if(isset($returnType) && $returnType == "combo"){
+                        echo "<option>No sites available</option>";
                     }
                 }
             } catch (Exception $exc) {
